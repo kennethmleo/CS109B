@@ -12,12 +12,19 @@ def test_policy(env, action, random=0):
 
             # Reset the environment, this will return the initial state
             c = env.reset()
+            if isinstance(c, tuple):
+                c = c[0]
 
             # Loop over the maximum number of steps in each episode
             for t in range(10000):
 
                 # Use the step method using the action sequence got from the toptimal policy
-                c, reward, done, info = env.step(action[c])
+                result = env.step(int(action[c]))
+                if len(result) == 4:
+                    c, reward, done, info = result
+                else:   # new Gym = 5 values
+                    c, reward, terminated, truncated, info = result
+                    done = terminated or truncated
 
                 # If the reward returned by the environment is 1, then the goal is reached
                 if done:
@@ -40,15 +47,24 @@ def test_policy(env, action, random=0):
 
             # Reset the environment, this will return the initial state
             c = env.reset()
+            if isinstance(c, tuple):   # ✅ Fix reset return format
+                c = c[0]
 
             # Loop over the maximum number of steps in each episode
             for t in range(10000):
 
                 # Use the step method using the action sequence got from the toptimal policy
                 try:
-                    c, reward, done, info = env.step(env.observation_space.sample())
+                    result = env.step(env.observation_space.sample())
                 except:
-                    c, reward, done, info = env.step(0)
+                    result = env.step(0)
+
+                # ✅ Handle result length
+                if len(result) == 4:
+                    c, reward, done, info = result
+                else:
+                    c, reward, terminated, truncated, info = result
+                    done = terminated or truncated
 
                 # If the reward returned by the environment is 1, then the goal is reached
                 if done:
